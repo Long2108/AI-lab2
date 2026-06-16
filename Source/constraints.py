@@ -98,6 +98,10 @@ def is_valid(grid, row, col, value, h_cons, v_cons):
     return True
 
 
+# Alias for backtracking solver
+is_valid_placement = is_valid
+
+
 # Alias for compatibility
 def is_valid_placement(grid, row, col, value, h_cons, v_cons):
     """Alias for is_valid function"""
