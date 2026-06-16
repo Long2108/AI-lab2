@@ -2,7 +2,7 @@
 import heapq
 from copy import deepcopy
 from typing import List, Optional, Tuple
-from Source.constraints import is_valid_placement
+from constraints import is_valid_placement
 
 
 def heuristic_count_empty(grid: List[List[int]]) -> int:

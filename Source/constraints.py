@@ -96,3 +96,9 @@ def is_valid(grid, row, col, value, h_cons, v_cons):
     grid[row][col] = original
 
     return True
+
+
+# Alias for compatibility
+def is_valid_placement(grid, row, col, value, h_cons, v_cons):
+    """Alias for is_valid function"""
+    return is_valid(grid, row, col, value, h_cons, v_cons)

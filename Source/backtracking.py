@@ -1,7 +1,7 @@
 """Backtracking solver for Futoshiki using parser + constraints."""
 from copy import deepcopy
 from typing import List, Optional
-from Source.constraints import is_valid_placement
+from constraints import is_valid_placement
 
 
 def find_empty(grid: List[List[int]]):
