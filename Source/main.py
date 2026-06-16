@@ -1,16 +1,18 @@
 from parser import read_input
+from constraints import is_valid
 
-N, grid, h_cons, v_cons = read_input("Inputs/input-01.txt")
-
-print("N =", N)
-print("Grid:")
-for row in grid:
-    print(row)
-
-print("\nHorizontal:")
-for row in h_cons:
-    print(row)
-
-print("\nVertical:")
-for row in v_cons:
-    print(row)
+N, grid, h_cons, v_cons = read_input(
+    "Inputs/input-01.txt"
+)
+for v in range(1, N + 1):
+    print(
+        f"value={v}",
+        is_valid(
+            grid,
+            0,
+            0,
+            v,
+            h_cons,
+            v_cons
+        )
+    )
