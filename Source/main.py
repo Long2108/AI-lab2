@@ -1,8 +1,6 @@
 from parser import read_input
 
-N, grid, h_cons, v_cons = read_input(
-    "Inputs/input-01.txt"
-)
+N, grid, h_cons, v_cons = read_input("Inputs/input-01.txt")
 
 print("N =", N)
 print("Grid:")
