@@ -1,81 +1,68 @@
+import argparse
+import os
+import time
+
+from astar import solve_astar
+from backtracking import solve_backtracking, solve_bruteforce
+from backward_chaining import solve_backward_chaining
+from cnf_generator import generate_cnf
+from forward_chaining import infer_facts, solve_forward_chaining
+from kb_generator import generate_kb
 from parser import read_input
-from backtracking import solve_backtracking
-from typing import List, Tuple
-
-def format_output(N: int, grid: List[List[int]], h_cons: List[List[int]], v_cons: List[List[int]]) -> str:
-    """
-    Format solved grid with inequality symbols for output.
-    
-    Format:
-    num [< or >] num [< or >] num ...
-    [^ or v] [^ or v] ...
-    num [< or >] num ...
-    ...
-    """
-    lines = []
-    
-    for row_idx in range(N):
-        # Build horizontal line for this row
-        row_line = ""
-        for col_idx in range(N):
-            row_line += str(grid[row_idx][col_idx])
-            
-            # Add horizontal constraint between this and next cell
-            if col_idx < N - 1:
-                h_constraint = h_cons[row_idx][col_idx]
-                if h_constraint == 1:
-                    row_line += " < "
-                elif h_constraint == -1:
-                    row_line += " > "
-                else:
-                    row_line += "   "  # 3 spaces for empty constraint
-        
-        lines.append(row_line)
-        
-        # Vertical constraints after this row (if not last row)
-        if row_idx < N - 1:
-            v_line = ""
-            for col_idx in range(N):
-                v_constraint = v_cons[row_idx][col_idx]
-                if v_constraint == 1:
-                    v_line += "^"
-                elif v_constraint == -1:
-                    v_line += "v"
-                else:
-                    v_line += " "
-                
-                # Add spacing between constraint symbols
-                if col_idx < N - 1:
-                    v_line += " "
-            
-            lines.append(v_line)
-    
-    return '\n'.join(lines)
+from utils import format_output, save_board
 
 
-def save_output(N: int, grid: List[List[int]], h_cons: List[List[int]], v_cons: List[List[int]], output_path: str):
-    """Save formatted solution to file."""
-    output = format_output(N, grid, h_cons, v_cons)
-    with open(output_path, 'w', encoding='utf-8') as f:
-        f.write(output)
+SOLVERS = {
+    "astar": solve_astar,
+    "backtrack": solve_backtracking,
+    "backward": solve_backward_chaining,
+    "bruteforce": solve_bruteforce,
+    "forward": solve_forward_chaining,
+}
 
 
-# Main execution
-N, grid, h_cons, v_cons = read_input("Inputs/input-01.txt")
+def default_output_path(input_path: str) -> str:
+    base = os.path.basename(input_path).replace("input", "output")
+    return os.path.join("Outputs", base)
 
-print("Solving Futoshiki puzzle...")
-print(f"Grid size: {N}x{N}")
 
-# Solve using backtracking
-solution = solve_backtracking(N, grid, h_cons, v_cons)
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Solve Futoshiki puzzles for AI Project 2.")
+    parser.add_argument("input", nargs="?", default=os.path.join("Inputs", "input-01.txt"))
+    parser.add_argument("--method", choices=sorted(SOLVERS), default="backtrack")
+    parser.add_argument("--output", default=None)
+    parser.add_argument("--show-kb", action="store_true", help="Print generated KB/CNF sizes.")
+    args = parser.parse_args()
 
-if solution:
-    print("✓ Solution found!")
-    print("\nSolved grid:")
+    N, grid, h_cons, v_cons = read_input(args.input)
+    output_path = args.output or default_output_path(args.input)
+
+    print(f"Solving {args.input} ({N}x{N}) with {args.method}...")
+    start = time.perf_counter()
+    solution = SOLVERS[args.method](N, grid, h_cons, v_cons)
+    elapsed = time.perf_counter() - start
+
+    if args.show_kb:
+        kb = generate_kb(N, grid, h_cons, v_cons)
+        cnf = generate_cnf(N, grid, h_cons, v_cons)
+        facts = infer_facts(N, grid, h_cons, v_cons)
+        print(f"KB facts: {len(kb['facts'])}; domain atoms: {len(kb['domains'])}; rules: {len(kb['rules'])}")
+        print(f"CNF clauses: {len(cnf)}; inferred facts after propagation: {len(facts)}")
+
+    if solution is None:
+        print("No solution found.")
+        return 1
+
+    print(f"Solution found in {elapsed:.4f}s")
+    print()
     print(format_output(N, solution, h_cons, v_cons))
-    
-    # Save to output file
-    save_output(N, solution, h_cons, v_cons, "Outputs/output-01.txt")
-    print("\n✓ Output saved to Outputs/output-01.txt")
-else:
-    print("✗ No solution found!")
+
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+    save_board(output_path, solution, h_cons, v_cons)
+    print()
+    print(f"Saved output to {output_path}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

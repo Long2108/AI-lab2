@@ -1,8 +1,9 @@
 """A* solver skeleton for Futoshiki."""
 import heapq
 from copy import deepcopy
-from typing import List, Optional, Tuple
-from constraints import is_valid_placement
+from itertools import count
+from typing import List, Optional
+from constraints import domain_values, is_valid_grid
 
 
 def heuristic_count_empty(grid: List[List[int]]) -> int:
@@ -20,39 +21,50 @@ def solve_astar(N: int, grid: List[List[int]], h_cons, v_cons) -> Optional[List[
         return N * N - assigned_count(state)
 
     pq = []
-    heapq.heappush(pq, (h(start), start))
+    tie = count()
+    heapq.heappush(pq, (h(start), 0, next(tie), start))
     visited = set()
 
     while pq:
-        f, state = heapq.heappop(pq)
+        _, g_cost, _, state = heapq.heappop(pq)
         if state in visited:
             continue
         visited.add(state)
-        # reconstruct grid
         cur_grid = [list(state[i * N:(i + 1) * N]) for i in range(N)]
         if all(v != 0 for v in state):
-            return cur_grid
-        # pick cell with smallest domain
+            if is_valid_grid(cur_grid, h_cons, v_cons, complete=True):
+                return cur_grid
+            continue
+
         best = None
-        best_dom = None
+        best_dom = []
         for r in range(N):
             for c in range(N):
                 if cur_grid[r][c] == 0:
-                    dom = [v for v in range(1, N + 1) if is_valid_placement(cur_grid, r, c, v, h_cons, v_cons)]
-                    if best is None or len(dom) < best_dom:
+                    dom = sorted(domain_values(cur_grid, r, c, h_cons, v_cons))
+                    if not dom:
                         best = (r, c)
-                        best_dom = len(dom)
+                        best_dom = []
+                        break
+                    if best is None or len(dom) < len(best_dom):
+                        best = (r, c)
+                        best_dom = dom
+            if best is not None and not best_dom:
+                break
         if best is None:
             continue
+        if not best_dom:
+            continue
+
         r, c = best
-        dom = [v for v in range(1, N + 1) if is_valid_placement(cur_grid, r, c, v, h_cons, v_cons)]
-        for v in dom:
+        for v in best_dom:
             new = deepcopy(cur_grid)
             new[r][c] = v
             new_state = tuple(cell for row in new for cell in row)
             if new_state in visited:
                 continue
-            heapq.heappush(pq, (assigned_count(new_state) + h(new_state), new_state))
+            new_g = g_cost + 1
+            heapq.heappush(pq, (new_g + h(new_state), new_g, next(tie), new_state))
 
     return None
 

@@ -1,3 +1,6 @@
+from typing import List, Set
+
+
 def check_row(grid, row, value):
     return value not in grid[row]
 
@@ -98,11 +101,47 @@ def is_valid(grid, row, col, value, h_cons, v_cons):
     return True
 
 
-# Alias for backtracking solver
-is_valid_placement = is_valid
-
-
-# Alias for compatibility
 def is_valid_placement(grid, row, col, value, h_cons, v_cons):
     """Alias for is_valid function"""
     return is_valid(grid, row, col, value, h_cons, v_cons)
+
+
+def is_complete(grid: List[List[int]]) -> bool:
+    return all(value != 0 for row in grid for value in row)
+
+
+def domain_values(grid: List[List[int]], row: int, col: int, h_cons, v_cons) -> Set[int]:
+    if grid[row][col] != 0:
+        return {grid[row][col]}
+    n = len(grid)
+    return {value for value in range(1, n + 1) if is_valid_placement(grid, row, col, value, h_cons, v_cons)}
+
+
+def is_valid_grid(grid: List[List[int]], h_cons, v_cons, complete: bool = False) -> bool:
+    n = len(grid)
+    values = set(range(1, n + 1))
+
+    for row in range(n):
+        seen = [value for value in grid[row] if value != 0]
+        if len(seen) != len(set(seen)):
+            return False
+        if complete and set(grid[row]) != values:
+            return False
+
+    for col in range(n):
+        seen = [grid[row][col] for row in range(n) if grid[row][col] != 0]
+        if len(seen) != len(set(seen)):
+            return False
+        if complete and {grid[row][col] for row in range(n)} != values:
+            return False
+
+    for row in range(n):
+        if not check_horizontal_constraints(grid, row, h_cons):
+            return False
+    for col in range(n):
+        if not check_vertical_constraints(grid, col, v_cons):
+            return False
+
+    if complete and not is_complete(grid):
+        return False
+    return True
