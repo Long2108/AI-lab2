@@ -1,81 +1,98 @@
-"""Constraint checking utilities for Futoshiki."""
-from typing import List
+def check_row(grid, row, value):
+    return value not in grid[row]
 
 
-def row_has_value(grid: List[List[int]], r: int, v: int) -> bool:
-    return v in grid[r]
+def check_col(grid, col, value):
+    n = len(grid)
 
-
-def col_has_value(grid: List[List[int]], c: int, v: int) -> bool:
-    return any(grid[r][c] == v for r in range(len(grid)))
-
-
-def check_inequalities(grid: List[List[int]], h_cons: List[List[int]], v_cons: List[List[int]]) -> bool:
-    N = len(grid)
-    # horizontal
-    for r in range(N):
-        for c in range(N - 1):
-            sign = h_cons[r][c]
-            a = grid[r][c]
-            b = grid[r][c + 1]
-            if a != 0 and b != 0:
-                if sign == 1 and not (a < b):
-                    return False
-                if sign == -1 and not (a > b):
-                    return False
-    # vertical
-    for r in range(N - 1):
-        for c in range(N):
-            sign = v_cons[r][c]
-            a = grid[r][c]
-            b = grid[r + 1][c]
-            if a != 0 and b != 0:
-                if sign == 1 and not (a < b):
-                    return False
-                if sign == -1 and not (a > b):
-                    return False
-    return True
-
-
-def is_valid_placement(grid: List[List[int]], r: int, c: int, value: int, h_cons: List[List[int]], v_cons: List[List[int]]) -> bool:
-    N = len(grid)
-    # check row/col uniqueness
-    if row_has_value(grid, r, value):
-        return False
-    if col_has_value(grid, c, value):
-        return False
-
-    # check inequality with left neighbor
-    if c - 1 >= 0 and grid[r][c - 1] != 0:
-        sign = h_cons[r][c - 1]
-        if sign == 1 and not (grid[r][c - 1] < value):
-            return False
-        if sign == -1 and not (grid[r][c - 1] > value):
-            return False
-    # with right neighbor
-    if c < N - 1 and grid[r][c + 1] != 0:
-        sign = h_cons[r][c]
-        if sign == 1 and not (value < grid[r][c + 1]):
-            return False
-        if sign == -1 and not (value > grid[r][c + 1]):
-            return False
-    # up
-    if r - 1 >= 0 and grid[r - 1][c] != 0:
-        sign = v_cons[r - 1][c]
-        if sign == 1 and not (grid[r - 1][c] < value):
-            return False
-        if sign == -1 and not (grid[r - 1][c] > value):
-            return False
-    # down
-    if r < N - 1 and grid[r + 1][c] != 0:
-        sign = v_cons[r][c]
-        if sign == 1 and not (value < grid[r + 1][c]):
-            return False
-        if sign == -1 and not (value > grid[r + 1][c]):
+    for r in range(n):
+        if grid[r][col] == value:
             return False
 
     return True
 
 
-if __name__ == '__main__':
-    print('constraints module: provides is_valid_placement and helpers')
+def check_horizontal_constraints(grid, row, h_cons):
+    n = len(grid)
+
+    for col in range(n - 1):
+
+        left = grid[row][col]
+        right = grid[row][col + 1]
+
+        # bỏ qua nếu chưa gán đủ
+        if left == 0 or right == 0:
+            continue
+
+        constraint = h_cons[row][col]
+
+        # <
+        if constraint == 1:
+            if left >= right:
+                return False
+
+        # >
+        elif constraint == -1:
+            if left <= right:
+                return False
+
+    return True
+
+
+def check_vertical_constraints(grid, col, v_cons):
+    n = len(grid)
+
+    for row in range(n - 1):
+
+        top = grid[row][col]
+        bottom = grid[row + 1][col]
+
+        if top == 0 or bottom == 0:
+            continue
+
+        constraint = v_cons[row][col]
+
+        # <
+        if constraint == 1:
+            if top >= bottom:
+                return False
+
+        # >
+        elif constraint == -1:
+            if top <= bottom:
+                return False
+
+    return True
+
+
+def is_valid(grid, row, col, value, h_cons, v_cons):
+    """
+    Kiểm tra có thể gán value vào (row,col) hay không
+    """
+
+    # hàng
+    if not check_row(grid, row, value):
+        return False
+
+    # cột
+    if not check_col(grid, col, value):
+        return False
+
+    # thử gán
+    original = grid[row][col]
+    grid[row][col] = value
+
+    # kiểm tra constraint ngang của hàng hiện tại
+    if not check_horizontal_constraints(grid, row, h_cons):
+        grid[row][col] = original
+        return False
+
+    # kiểm tra constraint dọc của cột hiện tại
+    if not check_vertical_constraints(grid, col, v_cons):
+        grid[row][col] = original
+        return False
+
+    # khôi phục
+    grid[row][col] = original
+
+    return True
