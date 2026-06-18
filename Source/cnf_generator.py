@@ -38,12 +38,14 @@ def generate_cnf(N: int, grid=None, h_cons=None, v_cons=None) -> List[Clause]:
 
     for i in range(1, N + 1):
         for v in range(1, N + 1):
+            clauses.append(tuple(val(i, j, v) for j in range(1, N + 1)))
             for j1 in range(1, N + 1):
                 for j2 in range(j1 + 1, N + 1):
                     clauses.append((neg(val(i, j1, v)), neg(val(i, j2, v))))
 
     for j in range(1, N + 1):
         for v in range(1, N + 1):
+            clauses.append(tuple(val(i, j, v) for i in range(1, N + 1)))
             for i1 in range(1, N + 1):
                 for i2 in range(i1 + 1, N + 1):
                     clauses.append((neg(val(i1, j, v)), neg(val(i2, j, v))))
