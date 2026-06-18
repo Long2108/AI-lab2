@@ -21,7 +21,19 @@ Available methods:
 Print KB/CNF statistics while solving:
 
 ```bash
-python main.py Inputs/input-01.txt --method forward --show-kb
+python main.py Inputs/input-01.txt --method forward --show-kb --stats
+```
+
+Run the full experiment table:
+
+```bash
+python run_experiments.py
+```
+
+Open the optional GUI:
+
+```bash
+python gui.py
 ```
 
 ## Input Format
@@ -52,6 +64,9 @@ The parser ignores blank lines and text after `#`, so comments are allowed.
 
 - `Inputs/input-01.txt` ... `Inputs/input-10.txt`: required test cases across 4x4, 5x5, 6x6, 7x7, and 9x9.
 - `Outputs/output-XX.txt`: generated solved grids.
+- `Outputs/experiment_results.csv`: generated runtime/memory/inference comparison table.
+- `gui.py`: optional Tkinter GUI for bonus demonstration.
+- `demo_script.md`: suggested recording script for the required demonstration videos.
 - `kb_generator.py`: finite ground KB facts/rules.
 - `cnf_generator.py`: propositional CNF clauses for Futoshiki constraints.
 - `forward_chaining.py`, `backward_chaining.py`, `astar.py`, `backtracking.py`: solving algorithms.
